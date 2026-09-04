@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
+}
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+model ShopSettings {
+  shop       String  @id
+  customCss  String  @default("")
+  customHtml String  @default("")
+  locale     String  @default("en")
+}
+
+model ProductOption {
+  id             String            @id @default(cuid())
+  shop           String
+  name           String
+  displayName    String
+  type           String
+  enabled        Boolean           @default(true)
+  required       Boolean           @default(false)
+  position       Int               @default(0)
+  helpText       String            @default("")
+  placeholder    String            @default("")
+  customCss      String            @default("")
+  customHtml     String            @default("")
+  giftWrap       Boolean           @default(false)
+  hideOutOfStock Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  values         OptionValue[]
+  products       OptionProduct[]
+  conditions     OptionCondition[]
+
+  @@index([shop, position])
+}
+
+model OptionValue {
+  id         String        @id @default(cuid())
+  optionId   String
+  option     ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  label      String
+  value      String
+  color      String        @default("")
+  imageUrl   String        @default("")
+  priceAddon Float         @default(0)
+  position   Int           @default(0)
+  enabled    Boolean       @default(true)
+  outOfStock Boolean       @default(false)
+}
+
+model OptionProduct {
+  id           String        @id @default(cuid())
+  optionId     String
+  option       ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  productGid   String
+  productTitle String        @default("")
+
+  @@unique([optionId, productGid])
+}
+
+model OptionCondition {
+  id             String        @id @default(cuid())
+  optionId       String
+  option         ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  sourceOptionId String
+  sourceValueId  String        @default("")
+  operator       String        @default("equals")
+}
